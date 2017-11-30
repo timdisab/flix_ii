@@ -24,24 +24,15 @@ class Movie < ApplicationRecord
 
   has_many :genres, through: :characterizations
 
-  def self.released
-    where("released_on <= ?", Time.now).order("released_on desc")
-  end
-
-  def self.hits
-    where('total_gross >= 300000000').order(total_gross: :desc)
-  end
-
-  def self.flops
-    where('total_gross < 50000000').order(total_gross: :asc)
-  end
+  scope :released, -> { where("released_on <= ?", Time.now).order("released_on desc") }
+  scope :hits, -> { released.where('total_gross >= 300000000').order(total_gross: :desc) }
+  scope :flops, -> { released.where('total_gross < 50000000').order(total_gross: :asc) }
+  scope :upcoming, -> {  where("released_on > ?", Time.now).order(released_on: :asc) }
+  scope :rated, ->(rating) { released.where(rating: rating) }
+  scope :recent, ->(max=5) { released.limit(max) }
 
   def self.recently_added
     order('created_at desc').limit(3)
-  end
-
-  def flop?
-    total_gross.blank? || total_gross < 50000000
   end
 
   def average_stars
